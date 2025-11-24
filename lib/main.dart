@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-// LANGKAH 1: Lakukan Import dart:io
-import 'dart:io'; 
+// LANGKAH 2: Lakukan Import package flutter_secure_storage
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; 
+// import dart:io, path_provider, dll. tidak diperlukan untuk secure storage
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'File I/O Demo',
+      title: 'Secure Storage Demo',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const MyHomePage(),
     );
@@ -28,106 +28,90 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String documentsPath = 'Loading...';
-  String tempPath = 'Loading...';
-  
-  // LANGKAH 2: Tambahkan Variabel File dan Text
-  // 'late' digunakan karena myFile akan diinisialisasi di initState/getPaths
-  late File myFile; 
-  String fileText = 'File belum dibaca.';
+  // LANGKAH 3: Tambahkan Variabel dan Controller
+  final TextEditingController pwdController = TextEditingController();
+  String myPass = ''; // Variabel untuk menampung data yang dibaca
 
-  // --- Metode Penulisan dan Pembacaan File ---
+  // LANGKAH 4: Inisialisasi Secure Storage dan Kunci
+  final FlutterSecureStorage storage = const FlutterSecureStorage();
+  final String keyMyKey = 'myPass'; // Kunci penyimpanan data
 
-  // LANGKAH 3: Buat Method writeFile()
-  Future<bool> _writeFile() async {
-    const String content = 'Margherita, Capricciosa, Napoli';
-    try {
-      // Menulis konten ke file yang sudah diinisialisasi
-      await myFile.writeAsString(content); 
-      return true;
-    } catch (e) {
-      print('Error menulis file: $e');
-      return false;
+  // LANGKAH 5: Buat Method writeToSecureStorage()
+  Future<void> _writeToSecureStorage() async {
+    // Menulis data dari TextField ke penyimpanan aman
+    await storage.write(
+      key: keyMyKey,
+      value: pwdController.text,
+    );
+    // Tampilkan notifikasi
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nilai berhasil disimpan secara aman!')),
+      );
     }
   }
 
-  // LANGKAH 5: Buat Method readFile()
-  Future<bool> _readFile() async {
-    try {
-      // Membaca konten dari file
-      String fileContent = await myFile.readAsString();
-      
-      setState(() {
-        fileText = fileContent;
-      });
-      return true;
-    } catch (e) {
-      print('Error membaca file: $e');
-      // Jika file belum dibuat atau dihapus
-      setState(() {
-        fileText = 'Gagal membaca file. Apakah sudah ditulis?';
-      });
-      return false;
-    }
-  }
-  
-  // --- Metode Inisialisasi Path ---
-  
-  // Perubahan: Metode getPaths() kini juga menginisialisasi myFile
-  Future<void> _getPaths() async {
-    final docDir = await getApplicationDocumentsDirectory();
-    final tempDir = await getTemporaryDirectory();
-
-    setState(() {
-      documentsPath = docDir.path;
-      tempPath = tempDir.path;
-    });
-    
-    // LANGKAH 4: Inisialisasi File dan Panggil writeFile()
-    // Membuat objek File dengan jalur lengkap
-    myFile = File('${docDir.path}/pizza.txt'); 
-    
-    // Menulis konten pertama kali
-    await _writeFile();
+  // LANGKAH 6: Buat Method readFromSecureStorage()
+  Future<String> _readFromSecureStorage() async {
+    // Membaca data menggunakan kunci
+    String? secret = await storage.read(key: keyMyKey);
+    // Jika data null (belum ada), kembalikan string kosong
+    return secret ?? '<< Tidak ada data tersimpan >>'; 
   }
 
-  // Panggil getPaths() di initState()
-  @override
-  void initState() {
-    super.initState();
-    _getPaths();
-  }
+  // --- Tampilan UI dan Logika ---
 
-  // --- Tampilan UI ---
-
-  // LANGKAH 6: Edit build() dan Tambahkan Tombol Baca
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('File I/O Flutter')),
+      appBar: AppBar(title: const Text('Flutter Secure Storage')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text('Doc path: $documentsPath'),
-            Text('Temp path: $tempPath'),
+            // LANGKAH 7: Tampilkan TextField untuk input kata sandi
+            TextField(
+              controller: pwdController,
+              decoration: const InputDecoration(
+                labelText: 'Masukkan Nilai Rahasia (Password/Token)',
+                border: OutlineInputBorder(),
+              ),
+              obscureText: true,
+            ),
+            const SizedBox(height: 20),
             
-            const Divider(height: 32),
-            
+            // Tombol "Save Value"
             ElevatedButton(
-              // Panggil readFile() saat tombol ditekan
-              onPressed: _readFile, 
-              child: const Text('Baca Isi File (pizza.txt)'),
+              onPressed: _writeToSecureStorage, 
+              child: const Text('Save Value (Tulis ke Secure Storage)'),
             ),
-
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            
+            // Tombol "Read Value"
+            // LANGKAH 8: Hubungkan Read ke Tombol dan Perbarui State
+            ElevatedButton(
+              onPressed: () {
+                _readFromSecureStorage().then((value) {
+                  setState(() {
+                    myPass = value; // Perbarui state myPass
+                  });
+                });
+              },
+              child: const Text('Read Value (Baca dari Secure Storage)'),
+            ),
+            
+            const Divider(height: 40),
+            
+            // Tampilkan hasil pembacaan
             const Text(
-              'Isi File:', 
-              style: TextStyle(fontWeight: FontWeight.bold)
+              'Nilai Terenkripsi yang Dibaca:',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            // Menampilkan konten yang dibaca dari file
-            Text(fileText), 
+            Text(
+              myPass,
+              style: const TextStyle(fontFamily: 'monospace', color: Colors.blueGrey),
+            ),
           ],
         ),
       ),

@@ -39,3 +39,7 @@ kode ini memiliki jaring pengaman yang mencegah aplikasi crash atau menampilkan 
 
 ![alt text](image-6.png)
 
+## Praktikum 7
+**Soal 9**
+
+![alt text](image-7.png)
