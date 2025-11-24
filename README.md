@@ -34,3 +34,8 @@ kode ini memiliki jaring pengaman yang mencegah aplikasi crash atau menampilkan 
 
 ![alt text](image-5.png)
 
+## Praktikum 6
+**Soal 8**
+
+![alt text](image-6.png)
+

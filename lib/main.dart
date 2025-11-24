@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-// LANGKAH 2: Lakukan Import
-import 'package:path_provider/path_provider.dart'; 
+import 'package:path_provider/path_provider.dart';
+// LANGKAH 1: Lakukan Import dart:io
+import 'dart:io'; 
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Path Provider Demo',
+      title: 'File I/O Demo',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const MyHomePage(),
     );
@@ -27,67 +28,106 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // LANGKAH 3: Tambahkan Variabel Path State
   String documentsPath = 'Loading...';
   String tempPath = 'Loading...';
+  
+  // LANGKAH 2: Tambahkan Variabel File dan Text
+  // 'late' digunakan karena myFile akan diinisialisasi di initState/getPaths
+  late File myFile; 
+  String fileText = 'File belum dibaca.';
 
-  // LANGKAH 4: Buat Method getPaths()
+  // --- Metode Penulisan dan Pembacaan File ---
+
+  // LANGKAH 3: Buat Method writeFile()
+  Future<bool> _writeFile() async {
+    const String content = 'Margherita, Capricciosa, Napoli';
+    try {
+      // Menulis konten ke file yang sudah diinisialisasi
+      await myFile.writeAsString(content); 
+      return true;
+    } catch (e) {
+      print('Error menulis file: $e');
+      return false;
+    }
+  }
+
+  // LANGKAH 5: Buat Method readFile()
+  Future<bool> _readFile() async {
+    try {
+      // Membaca konten dari file
+      String fileContent = await myFile.readAsString();
+      
+      setState(() {
+        fileText = fileContent;
+      });
+      return true;
+    } catch (e) {
+      print('Error membaca file: $e');
+      // Jika file belum dibuat atau dihapus
+      setState(() {
+        fileText = 'Gagal membaca file. Apakah sudah ditulis?';
+      });
+      return false;
+    }
+  }
+  
+  // --- Metode Inisialisasi Path ---
+  
+  // Perubahan: Metode getPaths() kini juga menginisialisasi myFile
   Future<void> _getPaths() async {
-    // Mengambil Jalur Dokumen (Penyimpanan Permanen)
     final docDir = await getApplicationDocumentsDirectory();
-    
-    // Mengambil Jalur Temporer (Penyimpanan Cache)
     final tempDir = await getTemporaryDirectory();
 
-    // Perbarui state
     setState(() {
       documentsPath = docDir.path;
       tempPath = tempDir.path;
     });
+    
+    // LANGKAH 4: Inisialisasi File dan Panggil writeFile()
+    // Membuat objek File dengan jalur lengkap
+    myFile = File('${docDir.path}/pizza.txt'); 
+    
+    // Menulis konten pertama kali
+    await _writeFile();
   }
 
-  // LANGKAH 5: Panggil getPaths() di initState()
+  // Panggil getPaths() di initState()
   @override
   void initState() {
     super.initState();
     _getPaths();
   }
 
-  // LANGKAH 6: Perbarui Tampilan (body)
+  // --- Tampilan UI ---
+
+  // LANGKAH 6: Edit build() dan Tambahkan Tombol Baca
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Path Provider')),
-      body: Center(
+      appBar: AppBar(title: const Text('File I/O Flutter')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // Menampilkan Jalur Dokumen
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Jalur Dokumen (Permanen):', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text(documentsPath),
-                ],
-              ),
-            ),
+            Text('Doc path: $documentsPath'),
+            Text('Temp path: $tempPath'),
             
-            // Menampilkan Jalur Temporer
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Jalur Temporer (Cache):', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text(tempPath),
-                ],
-              ),
+            const Divider(height: 32),
+            
+            ElevatedButton(
+              // Panggil readFile() saat tombol ditekan
+              onPressed: _readFile, 
+              child: const Text('Baca Isi File (pizza.txt)'),
             ),
+
+            const SizedBox(height: 16),
+            const Text(
+              'Isi File:', 
+              style: TextStyle(fontWeight: FontWeight.bold)
+            ),
+            // Menampilkan konten yang dibaca dari file
+            Text(fileText), 
           ],
         ),
       ),
