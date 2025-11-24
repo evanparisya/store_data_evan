@@ -20,3 +20,6 @@
 
 ## Praktikum 3
 **Soal 5**
+
+kode ini memiliki jaring pengaman yang mencegah aplikasi crash atau menampilkan Runtime Error (layar merah) ketika menghadapi data yang tidak terduga atau rusak dari sumber luar (seperti API atau file JSON).
+![alt text](image-4.png)

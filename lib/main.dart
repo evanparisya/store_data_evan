@@ -13,7 +13,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter JSON Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
       home: const MyHomePage(),
     );
   }
@@ -27,38 +30,31 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // Deklarasi State untuk menampung List objek Pizza (Langkah 19)
   List<Pizza> myPizzas = [];
 
-  // Fungsi untuk membaca, mengkonversi, dan mengembalikan List<Pizza>
-  // Signature Method diperbarui (Langkah 18)
+  // Fungsi untuk membaca dan mengkonversi JSON
   Future<List<Pizza>> readJsonFile() async {
-    // Membaca file JSON
-    String myString = await DefaultAssetBundle.of(
-      context,
-    ).loadString('assets/pizzalist.json');
+    // Membaca file JSON dari assets
+    String myString = await DefaultAssetBundle.of(context).loadString('assets/pizzalist.json');
 
-    // Mendekode JSON string
+    // Mendekode JSON string menjadi List Map
     List pizzaMapList = jsonDecode(myString);
 
-    // Konversi List Map ke List Objek Dart (Langkah 16)
+    // Konversi List Map ke List Objek Pizza menggunakan fromJson yang robust
     List<Pizza> tempPizzas = [];
     for (var pizzaMap in pizzaMapList) {
       Pizza newPizza = Pizza.fromJson(pizzaMap);
       tempPizzas.add(newPizza);
     }
 
-    // Mengembalikan List objek Pizza (Langkah 17)
     return tempPizzas;
   }
 
   @override
   void initState() {
     super.initState();
-
-    // Memanggil readJsonFile() dan memperbarui State (Langkah 20)
+    // Memuat data saat aplikasi dimulai dan memperbarui State
     readJsonFile().then((value) {
-      // value adalah hasil return dari readJsonFile(), yaitu List<Pizza>
       setState(() {
         myPizzas = value;
       });
@@ -68,26 +64,28 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Daftar Pizza')),
-
-      // Menampilkan Data di ListView.builder (Langkah 21)
+      appBar: AppBar(
+        title: const Text('Daftar Pizza Anti-Crash'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
       body: myPizzas.isEmpty
-          ? const Center(
-              child: CircularProgressIndicator(),
-            ) // Tampilkan loading
+          ? const Center(child: CircularProgressIndicator()) // Tampilan Loading
           : ListView.builder(
               itemCount: myPizzas.length,
               itemBuilder: (BuildContext context, int index) {
                 final Pizza currentPizza = myPizzas[index];
 
                 return ListTile(
-                  // Menampilkan pizzaName sebagai title
-                  title: Text(currentPizza.pizzaName),
-                  // Menampilkan description sebagai subtitle
+                  leading: const Icon(Icons.local_pizza, color: Colors.red),
+                  title: Text(
+                    currentPizza.pizzaName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text(currentPizza.description),
-                  // Menampilkan harga
-                  trailing: Text('\$${currentPizza.price.toStringAsFixed(2)}'),
-                  // Anda bisa menambahkan Image.network(currentPizza.imageUrl) di leading jika sudah ada URL yang valid
+                  trailing: Text(
+                    '\$${currentPizza.price.toStringAsFixed(2)}',
+                    style: const TextStyle(color: Colors.green),
+                  ),
                 );
               },
             ),
