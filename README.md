@@ -12,3 +12,11 @@
 **Soal 3**
 
 ![alt text](image-2.png)
+
+## Praktikum 2
+**Soal 4**
+
+![alt text](image-3.png)
+
+## Praktikum 3
+**Soal 5**
