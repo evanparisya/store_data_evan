@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'model/pizza.dart';
+// LANGKAH 3: Import shared_preferences
+import 'package:shared_preferences/shared_preferences.dart'; 
 
 void main() {
   runApp(const MyApp());
@@ -12,11 +12,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter JSON Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
+      title: 'Shared Preferences Counter',
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const MyHomePage(),
     );
   }
@@ -30,65 +27,75 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Pizza> myPizzas = [];
+  // LANGKAH 4: Variabel appCounter
+  int appCounter = 0;
 
-  // Fungsi untuk membaca dan mengkonversi JSON
-  Future<List<Pizza>> readJsonFile() async {
-    // Membaca file JSON dari assets
-    String myString = await DefaultAssetBundle.of(context).loadString('assets/pizzalist.json');
+  // LANGKAH 5-10: Memuat, Menambah, dan Menyimpan Hitungan
+  Future<void> _loadAndIncrementCounter() async {
+    // LANGKAH 6: Dapatkan Instance
+    SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    // Mendekode JSON string menjadi List Map
-    List pizzaMapList = jsonDecode(myString);
+    // LANGKAH 7: Baca, Cek Null, dan Increment
+    // Gunakan 'appCounter' sebagai kunci, default 0 jika null
+    appCounter = prefs.getInt('appCounter') ?? 0;
+    appCounter++;
 
-    // Konversi List Map ke List Objek Pizza menggunakan fromJson yang robust
-    List<Pizza> tempPizzas = [];
-    for (var pizzaMap in pizzaMapList) {
-      Pizza newPizza = Pizza.fromJson(pizzaMap);
-      tempPizzas.add(newPizza);
-    }
+    // LANGKAH 8: Simpan Nilai Baru
+    await prefs.setInt('appCounter', appCounter);
 
-    return tempPizzas;
+    // LANGKAH 9: Perbarui State
+    setState(() {});
   }
 
-  @override
-  void initState() {
-    super.initState();
-    // Memuat data saat aplikasi dimulai dan memperbarui State
-    readJsonFile().then((value) {
-      setState(() {
-        myPizzas = value;
-      });
+  // LANGKAH 13: Buat Method deletePreference()
+  Future<void> _deletePreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Menghapus SEMUA data dari shared_preferences untuk aplikasi ini
+    await prefs.clear();
+
+    // Perbarui variabel dan State agar tampilan langsung berubah
+    setState(() {
+      appCounter = 0;
     });
   }
 
+  // LANGKAH 10: Panggil di initState()
+  @override
+  void initState() {
+    super.initState();
+    // Memuat dan menambah hitungan saat aplikasi dibuka
+    _loadAndIncrementCounter();
+  }
+
+  // LANGKAH 11: Perbarui Tampilan (body)
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Daftar Pizza Anti-Crash'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: myPizzas.isEmpty
-          ? const Center(child: CircularProgressIndicator()) // Tampilan Loading
-          : ListView.builder(
-              itemCount: myPizzas.length,
-              itemBuilder: (BuildContext context, int index) {
-                final Pizza currentPizza = myPizzas[index];
-
-                return ListTile(
-                  leading: const Icon(Icons.local_pizza, color: Colors.red),
-                  title: Text(
-                    currentPizza.pizzaName,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(currentPizza.description),
-                  trailing: Text(
-                    '\$${currentPizza.price.toStringAsFixed(2)}',
-                    style: const TextStyle(color: Colors.green),
-                  ),
-                );
-              },
+      appBar: AppBar(title: const Text('Aplikasi Penghitung')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            Text(
+              'Aplikasi telah dibuka sebanyak:',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
             ),
+            // Tampilkan hitungan
+            Text(
+              '$appCounter',
+              style: Theme.of(context).textTheme.displayLarge,
+            ),
+            
+            // LANGKAH 14: Hubungkan ke Tombol
+            ElevatedButton(
+              onPressed: _deletePreference, // Panggil fungsi clear/reset
+              child: const Text('Reset Counter (Hapus Data)'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
