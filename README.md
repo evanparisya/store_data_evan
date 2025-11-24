@@ -28,3 +28,9 @@ kode ini memiliki jaring pengaman yang mencegah aplikasi crash atau menampilkan 
 **Soal 6**
 
 <video controls src="20251124-1018-02.0625445.mp4" title="Title"></video>
+
+## Praktikum 5
+**Soal 7**
+
+![alt text](image-5.png)
+
